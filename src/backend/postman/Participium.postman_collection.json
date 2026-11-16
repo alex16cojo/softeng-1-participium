@@ -1,0 +1,4004 @@
+{
+  "info": {
+    "_postman_id": "2b860fb5-ad7e-41a3-be26-f22d1c0443ce",
+    "name": "API_testing_collection",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "39201541"
+  },
+  "item": [
+    {
+      "name": "UC-01_register_citizen",
+      "item": [
+        {
+          "name": "invalid_register_request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"newcitizen1@example.com\",\r\n  \"first_name\": \"mario\",\r\n  \"last_name\": \"rossi\",\r\n  \"username\": \"mario.rossi\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register_new_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "let token = \"\";\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response contains user\", function () {\r",
+                  "    pm.expect(res.user).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email matches request\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.email);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username matches request\", function () {\r",
+                  "    pm.expect(res.user.username).to.eql(req.username);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User id exists\", function () {\r",
+                  "    pm.expect(res.user.id).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Created_at exists\", function () {\r",
+                  "    pm.expect(res.user.created_at).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Verification URL exists\", function () {\r",
+                  "    pm.expect(res.verification_url).to.exist;\r",
+                  "    pm.expect(res.verification_url).to.not.be.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Role is citizen\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User is active\", function () {\r",
+                  "    pm.expect(res.user.is_active).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email not verified\", function () {\r",
+                  "    pm.expect(res.user.is_email_verified).to.eql(false);\r",
+                  "});\r",
+                  "\r",
+                  "token = res.verification_url.split(\"/auth/verify/\")[1];\r",
+                  "pm.environment.set(\"citizen_verification_token\", token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "\r",
+                  "pm.environment.set(\"unique_account_id\", timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"newcitizen_{{unique_account_id}}@example.com\",\r\n  \"first_name\": \"mario\",\r\n  \"last_name\": \"rossi\",\r\n  \"password\": \"password123!\",\r\n  \"username\": \"mario_{{unique_account_id}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "verify_email_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.is_email_verified).to.eql(true);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/verify/{{citizen_verification_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify",
+                "{{citizen_verification_token}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-02_login_account",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"citizen\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{citizen_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Operator\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"operator\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{operator_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Admin\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"admin\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{admin_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-03_submit_report",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_new_report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "\"report_title",
+                  "type": "text",
+                  "uuid": "c8eeced2-23c2-49b6-b087-b4d76c7dd94e"
+                },
+                {
+                  "key": "description",
+                  "value": "\"report_description\"",
+                  "type": "text",
+                  "uuid": "4b46d9cb-5e50-4e89-b352-59343da10993"
+                },
+                {
+                  "key": "category_id",
+                  "value": "3",
+                  "type": "text",
+                  "uuid": "5f621492-73b4-48b5-a862-9cd11a154e45"
+                },
+                {
+                  "key": "latitude",
+                  "value": "12.0",
+                  "type": "text",
+                  "uuid": "5079966a-8f2f-4d4f-94b9-fa6606ebad7b"
+                },
+                {
+                  "key": "longitude",
+                  "value": "243.2",
+                  "type": "text",
+                  "uuid": "01a2ca35-f823-4973-9c59-f18ba40eaab0"
+                },
+                {
+                  "key": "is_anonymous",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "25ea3c9e-2733-472e-8def-2a160ca9f0f2"
+                },
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "uuid": "308b0fbc-8bfe-472b-a63a-69478f073c3f",
+                  "src": "/C:/Users/lorrn/Desktop/INFO/Software_engineering/participium/data/img/SEP-report.png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"current_user_info\", JSON.stringify(res.user));\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{citizen_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "succeed_new_report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "\r",
+                  "function randomInRange(min, max) {\r",
+                  "    return Math.random() * (max - min) + min;\r",
+                  "}\r",
+                  "\r",
+                  "const lat = (Math.random() * 180 - 90).toFixed(1);\r",
+                  "const lng = (Math.random() * 360 - 180).toFixed(1);\r",
+                  "\r",
+                  "pm.environment.set(\"unique_latitude\", lat);\r",
+                  "pm.environment.set(\"unique_longitude\", lng);\r",
+                  "\r",
+                  "pm.environment.set(\"unique_id\", timestamp);\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = pm.request.body.formdata;\r",
+                  "\r",
+                  "const req_is_anonymous = req.find(item => item.key === \"is_anonymous\").value;\r",
+                  "const req_is_anonymous_bool = req.is_anonymous === \"true\"\r",
+                  "const req_description = req.find(item => item.key === \"description\").value;\r",
+                  "const req_latitude = parseFloat(req.find(item => item.key === \"latitude\").value);\r",
+                  "const req_longitude = parseFloat(req.find(item => item.key === \"longitude\").value);\r",
+                  "\r",
+                  "const current_user = JSON.parse(\r",
+                  "    pm.environment.get(\"current_user_info\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report anonymous value matches\", function () {\r",
+                  "    pm.expect(res.is_anonymous).to.eql(req_is_anonymous_bool);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report status is pending approval\", function () {\r",
+                  "    pm.expect(res.status).to.eql(\"Pending Approval\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report description matches\", function () {\r",
+                  "    pm.expect(res.description).to.eql(req_description);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report category exists\", function () {\r",
+                  "    pm.expect(res.category).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report photos exist\", function () {\r",
+                  "    pm.expect(res.photos).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reporter name matches\", function () {\r",
+                  "    pm.expect(res.reporter.display_name).to.eql(`${current_user.first_name} ${current_user.last_name}`);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report position matches\", function () {\r",
+                  "    pm.expect(res.latitude).to.eql(req_latitude);\r",
+                  "    pm.expect(res.longitude).to.eql(req_longitude);\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "const responseData = pm.response.json();\r",
+                  "\r",
+                  "const newId = responseData.id;\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "pm.environment.set(\"report_id\", newId);\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "report_title_{{unique_id}}",
+                  "type": "text",
+                  "uuid": "c8eeced2-23c2-49b6-b087-b4d76c7dd94e"
+                },
+                {
+                  "key": "description",
+                  "value": "report_description_{{unique_id}}",
+                  "type": "text",
+                  "uuid": "4b46d9cb-5e50-4e89-b352-59343da10993"
+                },
+                {
+                  "key": "category_id",
+                  "value": "{{category_id}}",
+                  "type": "text",
+                  "uuid": "5f621492-73b4-48b5-a862-9cd11a154e45"
+                },
+                {
+                  "key": "latitude",
+                  "value": "{{unique_latitude}}",
+                  "type": "text",
+                  "uuid": "5079966a-8f2f-4d4f-94b9-fa6606ebad7b"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{unique_longitude}}",
+                  "type": "text",
+                  "uuid": "01a2ca35-f823-4973-9c59-f18ba40eaab0"
+                },
+                {
+                  "key": "is_anonymous",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "25ea3c9e-2733-472e-8def-2a160ca9f0f2"
+                },
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "uuid": "308b0fbc-8bfe-472b-a63a-69478f073c3f",
+                  "src": [
+                    "postman-cloud:///1f1552fc-5bb3-4400-86d8-dca499bb773c",
+                    "data/img/SEP-map.png",
+                    "data/img/SEP-report.png",
+                    "data/img/Gantt_Diagram.png"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-04_browse_reports_on_map",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get_reports",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Return a reports array\", function () {\r",
+                  "    pm.expect(res).to.be.an('array');\r",
+                  "    pm.expect(res.length).to.be.above(0);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "private_report_get_report_by_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"private_report_id\", 1);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 403\", function () {\r",
+                  "    pm.response.to.have.status(403);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/{{private_report_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{private_report_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid_report_get_report_by_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "\r",
+                  "pm.environment.set(\"invalid_report_id\", timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{invalid_report_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{invalid_report_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get_report_by_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report ID matches\", function () {\r",
+                  "    pm.expect(res.id).to.eql(pm.environment.get(\"report_id\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report title exist\", function () {\r",
+                  "    pm.expect(res.title).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report description exist\", function () {\r",
+                  "    pm.expect(res.description).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report status exist\", function () {\r",
+                  "    pm.expect(res.status).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report status is public\", function () {\r",
+                  "    const publicStatuses = [\"Assigned\", \"In Progress\", \"Suspended\", \"Resolved\"];\r",
+                  "    pm.expect(publicStatuses).to.include(res.status);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-05_search_and_filter_reports",
+      "item": [
+        {
+          "name": "invalid_filters_get_reports",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"invalid_filters\", \"status=Stato\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports?{{invalid_filters}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "{{invalid_filters}}",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get_reports",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"filters\", \"status=Resolved&sort=asc\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Return a reports array\", function () {\r",
+                  "    pm.expect(res).to.be.an('array');\r",
+                  "    pm.expect(res.length).to.be.above(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"All reports status is Resolved\", function () {\r",
+                  "    res.forEach(function(report) {\r",
+                  "        pm.expect(String(report.status)).to.eql(\"Resolved\");\r",
+                  "    });\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports?{{filters}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "{{filters}}",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "no_reports_get_reports",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "pm.environment.set(\"no_reports_filters\", \"category_id=\" + timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Return an empty array\", function () {\r",
+                  "    pm.expect(res).to.be.an('array').that.is.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports?{{no_reports_filters}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "{{no_reports_filters}}",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-06_view_report_details",
+      "item": [
+        {
+          "name": "invalid_report_get_report_by_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "\r",
+                  "pm.environment.set(\"invalid_report_id\", timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{invalid_report_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{invalid_report_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get_report_by_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Title and description exist\", function () {\r",
+                  "    pm.expect(res.title).to.exist;\r",
+                  "    pm.expect(res.description).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Coordinates exist\", function () {\r",
+                  "    pm.expect(res.latitude).to.exist;\r",
+                  "    pm.expect(res.longitude).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category and status exist\", function () {\r",
+                  "    pm.expect(res.category).to.exist;\r",
+                  "    pm.expect(res.status).to.exist; \r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Photo array exist\", function () {\r",
+                  "    pm.expect(res.photos).to.be.an('array');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-07_follow_report",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_follow_report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/follow",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"current_user_info\", JSON.stringify(res.user));\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{citizen_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "follow_report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "console.warn(\"Bug UC-07: The API does not update 'is_followed_by_current_user' and 'followers_count' after the action.\");\r",
+                  "\r",
+                  "pm.test(\"Current user follows the report\", function () {\r",
+                  "    pm.expect(res.is_followed_by_current_user).to.be.true;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Followers count > 0\", function () {\r",
+                  "    pm.expect(res.followers_count).to.be.above(0);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/follow",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "repeat_follow_report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Current user already follows the report\", function () {\r",
+                  "    pm.expect(res.is_followed_by_current_user).to.be.true;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Followers count > 0\", function () {\r",
+                  "    pm.expect(res.followers_count).to.be.above(0);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/follow",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "unfollow_report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "console.warn(\"Bug UC-07: The API does not update 'is_followed_by_current_user' after the action.\");\r",
+                  "\r",
+                  "pm.test(\"Current user no longer follows the report\", function () {\r",
+                  "    pm.expect(res.is_followed_by_current_user).to.be.false;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/follow",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-08_export_reports",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "export_find_pothole_via_roma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const csvContent = pm.response.text();\r",
+                  "const rows = csvContent.trim().split(\"\\n\");\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"CSV is not empty\", function () {\r",
+                  "    pm.expect(rows.length).to.be.above(1);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"CSV contains the correct report title\", function () {\r",
+                  "    pm.expect(csvContent).to.include(\"Pothole on Via Roma\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/export?status=Resolved",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Resolved"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "export_find_no_report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const csvContent = pm.response.text();\r",
+                  "const rows = csvContent.trim().split(\"\\n\");\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"CSV is empty\", function () {\r",
+                  "    pm.expect(rows.length).to.eql(1);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reports/export?status=In Progress",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "In Progress"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-09_public_statistics",
+      "item": [
+        {
+          "name": "view_stats",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const jsonData = pm.response.json();\r",
+                  "pm.test(\"Responde code is correct\", function(){\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test (\"Total reports is correct\", function(){\r",
+                  "    pm.expect(jsonData.total_reports).to.eql(1);\r",
+                  "    });\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/public?granularty=day",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "public"
+              ],
+              "query": [
+                {
+                  "key": "granularty",
+                  "value": "day"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "view_stats_granularity_year",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde code is correct\", function(){\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test (\"Total reports is correct\", function(){\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.total_reports).to.eql(1);\r",
+                  "    });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/public?granularty=year",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "public"
+              ],
+              "query": [
+                {
+                  "key": "granularty",
+                  "value": "year"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-10_manage_report",
+      "item": [
+        {
+          "name": "new_report_to_be_managed",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "\r",
+                  "function randomInRange(min, max) {\r",
+                  "    return Math.random() * (max - min) + min;\r",
+                  "}\r",
+                  "\r",
+                  "const lat = (Math.random() * 180 - 90).toFixed(1);\r",
+                  "const lng = (Math.random() * 360 - 180).toFixed(1);\r",
+                  "\r",
+                  "pm.environment.set(\"unique_latitude\", lat);\r",
+                  "pm.environment.set(\"unique_longitude\", lng);\r",
+                  "\r",
+                  "pm.environment.set(\"unique_id\", timestamp);\r",
+                  "\r",
+                  "pm.environment.set(\"casual_category\",(timestamp % 9) + 1)\r",
+                  "\r",
+                  "pm.sendRequest({ \r",
+                  "    url: pm.environment.get('base_url') + '/auth/login', \r",
+                  "    method: 'POST', header: { 'Content-Type': 'application/json' }, \r",
+                  "    body: { mode: 'raw', \r",
+                  "            raw: JSON.stringify({ identifier: pm.environment.get('id_preimposted_citizen'), password: pm.environment.get('password_preimposted_citizen') }) } }, \r",
+                  "    function (err, res) { });\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = pm.request.body.formdata;\r",
+                  "\r",
+                  "const req_is_anonymous = req.find(item => item.key === \"is_anonymous\").value;\r",
+                  "const req_is_anonymous_bool = req.is_anonymous === \"true\"\r",
+                  "const req_description = req.find(item => item.key === \"description\").value;\r",
+                  "const req_latitude = parseFloat(req.find(item => item.key === \"latitude\").value);\r",
+                  "const req_longitude = parseFloat(req.find(item => item.key === \"longitude\").value);\r",
+                  "\r",
+                  "const current_user = JSON.parse(\r",
+                  "    pm.environment.get(\"current_user_info\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report anonymous value matches\", function () {\r",
+                  "    pm.expect(res.is_anonymous).to.eql(req_is_anonymous_bool);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report status is pending approval\", function () {\r",
+                  "    pm.expect(res.status).to.eql(\"Pending Approval\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report description matches\", function () {\r",
+                  "    pm.expect(res.description).to.eql(req_description);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report category exists\", function () {\r",
+                  "    pm.expect(res.category).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report photos exist\", function () {\r",
+                  "    pm.expect(res.photos).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reporter name matches\", function () {\r",
+                  "    pm.expect(res.reporter.display_name).to.eql(`${current_user.first_name} ${current_user.last_name}`);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Report position matches\", function () {\r",
+                  "    pm.expect(res.latitude).to.eql(req_latitude);\r",
+                  "    pm.expect(res.longitude).to.eql(req_longitude);\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "const responseData = pm.response.json();\r",
+                  "\r",
+                  "const newId = responseData.id;\r",
+                  "\r",
+                  "pm.environment.set(\"report_id\", newId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "report_title_{{unique_id}}",
+                  "type": "text",
+                  "uuid": "c8eeced2-23c2-49b6-b087-b4d76c7dd94e"
+                },
+                {
+                  "key": "description",
+                  "value": "report_description_{{unique_id}}",
+                  "type": "text",
+                  "uuid": "4b46d9cb-5e50-4e89-b352-59343da10993"
+                },
+                {
+                  "key": "category_id",
+                  "value": "7",
+                  "type": "text",
+                  "uuid": "5f621492-73b4-48b5-a862-9cd11a154e45"
+                },
+                {
+                  "key": "latitude",
+                  "value": "{{unique_latitude}}",
+                  "type": "text",
+                  "uuid": "5079966a-8f2f-4d4f-94b9-fa6606ebad7b"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{unique_longitude}}",
+                  "type": "text",
+                  "uuid": "01a2ca35-f823-4973-9c59-f18ba40eaab0"
+                },
+                {
+                  "key": "is_anonymous",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "25ea3c9e-2733-472e-8def-2a160ca9f0f2"
+                },
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "uuid": "308b0fbc-8bfe-472b-a63a-69478f073c3f",
+                  "src": [
+                    "postman-cloud:///1f1552fc-5bb3-4400-86d8-dca499bb773c",
+                    "data/img/SEP-map.png",
+                    "data/img/SEP-report.png",
+                    "data/img/Gantt_Diagram.png"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Operator\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"operator\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{operator_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "approve_pending_report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 1);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Response status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "pm.test(\"Status is Assigned\", function () {\r",
+                  "    pm.expect(pm.response.json().status).to.eql(\"Assigned\");\r",
+                  "    });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operator/reports/{{report_id}}/assign",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operator",
+                "reports",
+                "{{report_id}}",
+                "assign"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "access_to_assigned_reports",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res= pm.response.json();\r",
+                  "\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "/*pm.test(\"Correct report displayed\", function () {\r",
+                  "    const title = \"report_description_\" + pm.environment.get(\"unique_id\");\r",
+                  "    \r",
+                  "    const found = res.find(report => report.description === title);\r",
+                  "    \r",
+                  "    pm.expect(found).to.not.be.undefined;\r",
+                  "});*/"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/operator/reports/assigned",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operator",
+                "reports",
+                "assigned"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update_status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res= pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "pm.test(\"Response body contains the correct status\", function () {\r",
+                  "    pm.expect(res.status).to.eql(\"In Progress\");\r",
+                  "    });\r",
+                  "    "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"report_id\", 1);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "note",
+                  "value": "Report assegnato e in fase di elaborazione",
+                  "type": "text",
+                  "uuid": "b2f30175-3865-4f22-baed-91fb9eb9e490"
+                },
+                {
+                  "key": "status",
+                  "value": "In Progress",
+                  "type": "text",
+                  "uuid": "d5543cee-0ac2-401e-8c93-bb062e0b882e"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/operator/reports/{{report_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "operator",
+                "reports",
+                "{{report_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-11_send_message",
+      "item": [
+        {
+          "name": "access_to_messages_list",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res=pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is empty\", function () {\r",
+                  "    pm.expect(res.length).to.equal(0);\r",
+                  "    });\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "note",
+                  "value": "Report assegnato e in fase di elaborazione",
+                  "type": "text",
+                  "uuid": "b2f30175-3865-4f22-baed-91fb9eb9e490"
+                },
+                {
+                  "key": "status",
+                  "value": "In Progress",
+                  "type": "text",
+                  "uuid": "d5543cee-0ac2-401e-8c93-bb062e0b882e"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "send_message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res=pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response body contains the correct message\", function () {\r",
+                  "    pm.expect(res.body).to.eql(\"Ciao\");\r",
+                  "    });\r",
+                  "    "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "body",
+                  "value": "Ciao",
+                  "type": "text",
+                  "uuid": "b2f30175-3865-4f22-baed-91fb9eb9e490"
+                },
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "d5543cee-0ac2-401e-8c93-bb062e0b882e"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "check_notification",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.sendRequest({ \r",
+                  "    url: pm.environment.get('base_url') + '/auth/login', \r",
+                  "    method: 'POST', header: { 'Content-Type': 'application/json' }, \r",
+                  "    body: { mode: 'raw', \r",
+                  "            raw: JSON.stringify({ identifier: pm.environment.get('id_preimposted_citizen'), password: pm.environment.get('password_preimposted_citizen') }) } }, \r",
+                  "    function (err, res) { });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const res= pm.response.json(); \r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "pm.test(\"Notifica ricevuta.\", function () {\r",
+                  "    pm.expect(res[(res.length-1)].body).to.include(\"Ciao\");\r",
+                  "    });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Operator\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"operator\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{operator_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "send_invalid_message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res=pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "    "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "body",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "b2f30175-3865-4f22-baed-91fb9eb9e490"
+                },
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "d5543cee-0ac2-401e-8c93-bb062e0b882e"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-12_reply_to_operator_message",
+      "item": [
+        {
+          "name": "user_access_to_report_list",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.sendRequest({ \r",
+                  "    url: pm.environment.get('base_url') + '/auth/login', \r",
+                  "    method: 'POST', header: { 'Content-Type': 'application/json' }, \r",
+                  "    body: { mode: 'raw', \r",
+                  "            raw: JSON.stringify({ identifier: pm.environment.get('id_preimposted_citizen'), password: pm.environment.get('password_preimposted_citizen') }) } }, \r",
+                  "    function (err, res) { });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const res= pm.response.json();\r",
+                  "\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "pm.test(\"Nuovo report presente nella lista\", function () {\r",
+                  "    pm.expect(res[(res.length-2)].status).to.be.eql(\"In Progress\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reply_to_operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Response code is 201\", function(){\r",
+                  "  pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response body contains correct message\", function(){\r",
+                  "    pm.expect(res.body).to.eql(\"Grazie per aver accettato la segnalazione\");\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "body",
+                  "value": "Grazie per aver accettato la segnalazione",
+                  "type": "text",
+                  "uuid": "12ce45dc-29c6-4244-99e8-eb02d5133754"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/{{report_id}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "{{report_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Operator\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"operator\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{operator_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "check_notification",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const res= pm.response.json(); \r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    });\r",
+                  "\r",
+                  "pm.test(\"Notifica ricevuta.\", function () {\r",
+                  "    pm.expect(res[0].body).to.include(\"Grazie per aver accettato la segnalazione\");\r",
+                  "    });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-13_private_statistics",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_get_private_stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Admin\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"admin\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{admin_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get_private_stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"\")"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-14_manage_categories",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_create_user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"category_id\": 0,\r\n  \"email\": \"new_user@example.com\",\r\n  \"email_notifications_enabled\": true,\r\n  \"first_name\": \"New\",\r\n  \"is_active\": true,\r\n  \"last_name\": \"User\",\r\n  \"password\": \"new_user\",\r\n  \"role\": \"citizen\",\r\n  \"username\": \"new_user\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_update_user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"category_id\": 0,\r\n  \"email\": \"updated_user@example.com\",\r\n  \"email_notifications_enabled\": true,\r\n  \"first_name\": \"Updated\",\r\n  \"is_active\": true,\r\n  \"last_name\": \"User\",\r\n  \"password\": \"Updated_user\",\r\n  \"role\": \"citizen\",\r\n  \"username\": \"Updated_user\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_create_category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"is_active\":true,\r\n    \"name\":\"new_category\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "try_update_category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"is_active\":true,\r\n    \"name\":\"updated_category\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories/{{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                "{{category_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Admin\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"admin\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{admin_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create_user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User id exists\", function () {\r",
+                  "    pm.expect(res.id).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email matches request\", function () {\r",
+                  "    pm.expect(res.email).to.eql(req.email);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username matches request\", function () {\r",
+                  "    pm.expect(res.username).to.eql(req.username);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User is active\", function () {\r",
+                  "    pm.expect(res.is_active).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email verified\", function () {\r",
+                  "    pm.expect(res.is_email_verified).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Role is citizen\", function () {\r",
+                  "    pm.expect(res.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Created_at exists\", function () {\r",
+                  "    pm.expect(res.created_at).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"category_id\": 0,\r\n  \"email\": \"new_user@example.com\",\r\n  \"email_notifications_enabled\": true,\r\n  \"first_name\": \"New\",\r\n  \"is_active\": true,\r\n  \"last_name\": \"User\",\r\n  \"password\": \"new_user\",\r\n  \"role\": \"citizen\",\r\n  \"username\": \"new_user\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update_user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User id exists\", function () {\r",
+                  "    pm.expect(res.id).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email matches request\", function () {\r",
+                  "    pm.expect(res.email).to.eql(req.email);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username matches request\", function () {\r",
+                  "    pm.expect(res.username).to.eql(req.username);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User is active\", function () {\r",
+                  "    pm.expect(res.is_active).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email verified\", function () {\r",
+                  "    pm.expect(res.is_email_verified).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Role is citizen\", function () {\r",
+                  "    pm.expect(res.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Created_at exists\", function () {\r",
+                  "    pm.expect(res.created_at).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"category_id\": 0,\r\n  \"email\": \"updated_user@example.com\",\r\n  \"email_notifications_enabled\": true,\r\n  \"first_name\": \"Updated\",\r\n  \"is_active\": true,\r\n  \"last_name\": \"User\",\r\n  \"password\": \"Updated_user\",\r\n  \"role\": \"citizen\",\r\n  \"username\": \"Updated_user\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create_category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category id exists\", function () {\r",
+                  "    pm.expect(res.id).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category is active\", function () {\r",
+                  "    pm.expect(res.is_active).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category name matches request\", function () {\r",
+                  "    pm.expect(res.name).to.eql(req.name);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Created_at exists\", function () {\r",
+                  "    pm.expect(res.created_at).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"is_active\":true,\r\n    \"name\":\"new_category\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update_category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category id exists\", function () {\r",
+                  "    pm.expect(res.id).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category is active\", function () {\r",
+                  "    pm.expect(res.is_active).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Category name matches request\", function () {\r",
+                  "    pm.expect(res.name).to.eql(req.name);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Created_at exists\", function () {\r",
+                  "    pm.expect(res.created_at).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"is_active\":true,\r\n    \"name\":\"updated_category\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories/{{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                "{{category_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid_category_update_category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 404 Not Found\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message exists\", function () {\r",
+                  "    pm.expect(res.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"is_active\":true,\r\n    \"name\":\"updated_category\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories/{{invalid_category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                "{{invalid_category_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-15_update_profile",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "retrieve_profile_info_unathorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login_citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const req = JSON.parse(pm.request.body.raw);\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email is verified\", function () {\r",
+                  "    pm.expect(res.user.email).to.eql(req.identifier);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.user.role).to.eql(\"citizen\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{citizen_credentials}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "retrieve_profile_info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "const unique_account_id = pm.environment.get(\"unique_account_id\")\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User email matches\", function () {\r",
+                  "    pm.expect(res.email).to.eql(\"citizen@example.com\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User last_name matches\", function () {\r",
+                  "    pm.expect(res.last_name).to.eql(\"Citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User does not have a profile picture\", function () {\r",
+                  "    pm.expect(res.profile_picture_path).is.null\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update_profile_info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User role is Citizen\", function () {\r",
+                  "    pm.expect(res.role).to.eql(\"citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User last name is Modified\", function () {\r",
+                  "    pm.expect(res.last_name).to.eql(\"Citizen\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User profile picture exists\", function () {\r",
+                  "    pm.expect(res.profile_picture_path).to.exist\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category",
+                  "value": " null,",
+                  "type": "text"
+                },
+                {
+                  "key": "category_id",
+                  "value": " null,",
+                  "type": "text"
+                },
+                {
+                  "key": "created_at",
+                  "value": "2026-05-19T13:17:01",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "citizen@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "email_notifications_enabled",
+                  "value": " false,",
+                  "type": "text"
+                },
+                {
+                  "key": "first_name",
+                  "value": "Marco",
+                  "type": "text"
+                },
+                {
+                  "key": "id",
+                  "value": " 1,",
+                  "type": "text"
+                },
+                {
+                  "key": "is_active",
+                  "value": " true,",
+                  "type": "text"
+                },
+                {
+                  "key": "is_email_verified",
+                  "value": "true,",
+                  "type": "text"
+                },
+                {
+                  "key": "last_name",
+                  "value": "Citizen",
+                  "type": "text"
+                },
+                {
+                  "key": "role",
+                  "value": "citizen,",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "citizen",
+                  "type": "text"
+                },
+                {
+                  "key": "profile_picture",
+                  "type": "file",
+                  "uuid": "0c32641b-7887-4098-8c13-d3d686a71c52",
+                  "src": "data/img/SEP-map.png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC-16_logout",
+      "item": [
+        {
+          "name": "account_logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
